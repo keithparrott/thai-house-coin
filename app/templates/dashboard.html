@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Thai House Coin Exchange{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="stat-value">{{ "%.2f"|format(total_balance) }}</div>
+        <div class="stat-label">Total THC</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ pending_redemptions_in }}</div>
+        <div class="stat-label">Incoming Redemptions</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ pending_redemptions_out }}</div>
+        <div class="stat-label">Outgoing Redemptions</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ pending_claims }}</div>
+        <div class="stat-label">Pending Claims</div>
+    </div>
+</div>
+
+{% if top_sources %}
+<div class="card">
+    <h2>Top Sources</h2>
+    <table>
+        <thead><tr><th>From</th><th>Amount</th></tr></thead>
+        <tbody>
+        {% for bal in top_sources %}
+        <tr class="{{ 'redeemable' if bal.amount >= 1.0 }}">
+            <td>{{ bal.source.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(bal.amount) }} THC</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if recent_txns %}
+<div class="card">
+    <h2>Recent Activity</h2>
+    <table>
+        <thead><tr><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>When</th></tr></thead>
+        <tbody>
+        {% for txn in recent_txns %}
+        <tr class="{{ 'invalidated' if txn.is_invalidated }}">
+            <td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td>
+            <td>{{ txn.from_user.display_name }}</td>
+            <td>{{ txn.to_user.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }}</span></td>
+            <td>{{ txn.created_at.strftime('%b %d, %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

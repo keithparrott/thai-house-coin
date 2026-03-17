@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Wallet{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>Wallet</h1>
+    <a href="{{ url_for('wallet.send') }}" class="btn btn-primary">Send THC</a>
+</div>
+
+<div class="card" style="text-align: center;">
+    <div class="stat-label">Total Balance</div>
+    <div class="thc-amount large">{{ "%.2f"|format(total) }} THC</div>
+</div>
+
+<div class="card">
+    <h2>Balance by Source</h2>
+    {% if balances %}
+    <table>
+        <thead><tr><th>From</th><th>Amount</th><th>Redeemable</th></tr></thead>
+        <tbody>
+        {% for bal in balances %}
+        <tr class="{{ 'redeemable' if bal.amount >= 1.0 }}">
+            <td>{{ bal.source.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(bal.amount) }} THC</span></td>
+            <td>{% if bal.amount >= 1.0 %}<a href="{{ url_for('redemption.index') }}" class="btn btn-gold btn-sm">Redeem</a>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #666;">No THC yet. Complete some bounties to earn coins!</p>
+    {% endif %}
+</div>
+{% endblock %}

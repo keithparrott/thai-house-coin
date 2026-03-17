@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Bounty Board{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>Bounty Board</h1>
+    <a href="{{ url_for('bounty.create') }}" class="btn btn-gold">Post Bounty</a>
+</div>
+
+{% for bounty in bounties %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h3 style="margin-bottom: 0.3rem;">
+                <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
+            </h3>
+            <p style="font-size: 0.85rem; color: #666;">
+                Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <span class="thc-amount" style="font-size: 1.3rem;">{{ "%.2f"|format(bounty.reward_amount) }} THC</span><br>
+            <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
+        </div>
+    </div>
+    {% if bounty.description %}
+    <p style="margin-top: 0.5rem;">{{ bounty.description[:200] }}{% if bounty.description|length > 200 %}...{% endif %}</p>
+    {% endif %}
+</div>
+{% else %}
+<div class="card"><p>No bounties yet. Be the first to post one!</p></div>
+{% endfor %}
+{% endblock %}

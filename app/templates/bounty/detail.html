@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ bounty.title }} — Bounty{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 style="font-size: 1.5rem;">{{ bounty.title }}</h1>
+            <p style="color: #666;">Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y %H:%M') }}</p>
+        </div>
+        <div style="text-align: right;">
+            <span class="thc-amount large">{{ "%.2f"|format(bounty.reward_amount) }}</span>
+            <div style="font-size: 0.8rem; color: #666;">THC Reward</div>
+            <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
+        </div>
+    </div>
+
+    {% if bounty.description %}
+    <div style="margin-top: 1rem; padding: 1rem; background: var(--light-gold); border-radius: 6px;">
+        {{ bounty.description }}
+    </div>
+    {% endif %}
+
+    {% if bounty.status == 'open' and bounty.poster_id == current_user.id %}
+    <div style="margin-top: 1rem;">
+        <form method="POST" action="{{ url_for('bounty.cancel', bounty_id=bounty.id) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline btn-sm">Cancel Bounty</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% if bounty.status == 'open' and bounty.poster_id != current_user.id %}
+<div class="card">
+    <h2>Submit a Claim</h2>
+    <form method="POST" action="{{ url_for('bounty.submit_claim', bounty_id=bounty.id) }}">
+        {{ claim_form.hidden_tag() }}
+        <div class="form-group">
+            {{ claim_form.message.label }}
+            {{ claim_form.message(placeholder="Describe how you completed the task or provide proof...") }}
+        </div>
+        {{ claim_form.submit(class="btn btn-gold") }}
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Claims</h2>
+    {% set claims = bounty.claims.all() %}
+    {% if claims %}
+    {% for claim in claims %}
+    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>{{ claim.claimant.display_name }}</strong>
+            <span class="badge badge-{{ claim.status }}">{{ claim.status }}</span>
+        </div>
+        <p style="margin: 0.5rem 0; font-size: 0.9rem;">{{ claim.message }}</p>
+        <p style="font-size: 0.8rem; color: #666;">{{ claim.submitted_at.strftime('%b %d, %Y %H:%M') }}</p>
+
+        {% if claim.status == 'pending' and bounty.poster_id == current_user.id %}
+        <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            <form method="POST" action="{{ url_for('bounty.approve_claim', claim_id=claim.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('bounty.reject_claim', claim_id=claim.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline btn-sm">Reject</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color: #666;">No claims yet.</p>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('bounty.board') }}" class="btn btn-outline">&larr; Back to Board</a>
+{% endblock %}

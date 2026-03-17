@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Redemptions{% endblock %}
+{% block content %}
+<h1>Redemptions</h1>
+
+{% if redeemable %}
+<div class="card">
+    <h2>Request a Redemption</h2>
+    <p style="margin-bottom: 1rem; color: #666;">You can redeem 1.0 THC from someone for a Thai lunch!</p>
+    <form method="POST" action="{{ url_for('redemption.request_redemption') }}">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.target.label }}
+            {{ form.target() }}
+        </div>
+        {{ form.submit(class="btn btn-gold") }}
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Incoming Requests</h2>
+    {% if incoming %}
+    <table>
+        <thead><tr><th>From</th><th>Amount</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for r in incoming %}
+        <tr>
+            <td>{{ r.requester.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(r.amount) }} THC</span></td>
+            <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+            <td>{{ r.created_at.strftime('%b %d, %Y') }}</td>
+            <td>
+                {% if r.status == 'pending' %}
+                <form method="POST" action="{{ url_for('redemption.accept', redemption_id=r.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Accept</button>
+                </form>
+                <form method="POST" action="{{ url_for('redemption.decline', redemption_id=r.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline btn-sm">Decline</button>
+                </form>
+                {% else %}
+                {% if r.resolved_at %}{{ r.resolved_at.strftime('%b %d') }}{% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #666;">No incoming redemption requests.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Your Requests</h2>
+    {% if outgoing %}
+    <table>
+        <thead><tr><th>To</th><th>Amount</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for r in outgoing %}
+        <tr>
+            <td>{{ r.target.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(r.amount) }} THC</span></td>
+            <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+            <td>{{ r.created_at.strftime('%b %d, %Y') }}</td>
+            <td>
+                {% if r.status == 'pending' %}
+                <form method="POST" action="{{ url_for('redemption.cancel', redemption_id=r.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline btn-sm">Cancel</button>
+                </form>
+                {% else %}
+                {% if r.resolved_at %}{{ r.resolved_at.strftime('%b %d') }}{% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #666;">You haven't made any redemption requests.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Invalidate Transaction{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <h2>Invalidate Transaction #{{ txn.id }}</h2>
+    <table>
+        <tr><th>Type</th><td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td></tr>
+        <tr><th>From</th><td>{{ txn.from_user.display_name }}</td></tr>
+        <tr><th>To</th><td>{{ txn.to_user.display_name }}</td></tr>
+        <tr><th>Amount</th><td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }} THC</span></td></tr>
+        <tr><th>Date</th><td>{{ txn.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+        <tr><th>Memo</th><td>{{ txn.memo or '—' }}</td></tr>
+    </table>
+    <p style="margin: 1rem 0; color: var(--error); font-weight: 700;">
+        This will invalidate this transaction and recalculate all balances. This cannot be undone.
+    </p>
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">Confirm Invalidation</button>
+        <a href="{{ url_for('ledger.index') }}" class="btn btn-outline" style="margin-left: 0.5rem;">Cancel</a>
+    </form>
+</div>
+{% endblock %}

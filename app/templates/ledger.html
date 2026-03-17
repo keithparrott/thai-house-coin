@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Ledger{% endblock %}
+{% block content %}
+<h1>Public Ledger</h1>
+
+<div class="card">
+    <form method="GET" class="filter-bar">
+        <div class="form-group">
+            <label>Type</label>
+            <select name="type">
+                <option value="">All</option>
+                <option value="bounty_payout" {{ 'selected' if txn_type == 'bounty_payout' }}>Bounty Payout</option>
+                <option value="send" {{ 'selected' if txn_type == 'send' }}>Send</option>
+                <option value="burn" {{ 'selected' if txn_type == 'burn' }}>Burn</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>User</label>
+            <select name="user">
+                <option value="">All</option>
+                {% for u in users %}
+                <option value="{{ u.id }}" {{ 'selected' if user_id == u.id }}>{{ u.display_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Memo</th><th>Date</th>
+            {% if current_user.is_admin %}<th></th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for txn in transactions %}
+        <tr class="{{ 'invalidated' if txn.is_invalidated }}">
+            <td>{{ txn.id }}</td>
+            <td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td>
+            <td>{{ txn.from_user.display_name }}</td>
+            <td>{{ txn.to_user.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }}</span></td>
+            <td style="font-size: 0.8rem;">{{ txn.memo or '—' }}{% if txn.is_invalidated %}<br><em>Invalidated by {{ txn.invalidated_by_user.display_name }} on {{ txn.invalidated_at.strftime('%b %d') }}</em>{% endif %}</td>
+            <td>{{ txn.created_at.strftime('%b %d, %H:%M') }}</td>
+            {% if current_user.is_admin %}
+            <td>
+                {% if not txn.is_invalidated %}
+                <a href="{{ url_for('admin.invalidate_transaction', txn_id=txn.id) }}" class="btn btn-outline btn-sm">Invalidate</a>
+                {% endif %}
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center; color:#666;">No transactions found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="?page={{ pagination.prev_num }}&type={{ txn_type }}&user={{ user_id }}">&laquo;</a>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                {% if p == pagination.page %}
+                <span class="active"><span>{{ p }}</span></span>
+                {% else %}
+                <a href="?page={{ p }}&type={{ txn_type }}&user={{ user_id }}">{{ p }}</a>
+                {% endif %}
+            {% else %}
+            <span>&hellip;</span>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="?page={{ pagination.next_num }}&type={{ txn_type }}&user={{ user_id }}">&raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

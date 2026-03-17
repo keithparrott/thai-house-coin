@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+<h1>Leaderboard</h1>
+
+<div class="card">
+    <table>
+        <thead><tr><th>Rank</th><th>User</th><th>Total THC</th></tr></thead>
+        <tbody>
+        {% for entry in leaderboard %}
+        <tr>
+            <td style="font-weight: 700;">
+                {% if loop.index == 1 %}&#x1F947;{% elif loop.index == 2 %}&#x1F948;{% elif loop.index == 3 %}&#x1F949;{% else %}{{ loop.index }}{% endif %}
+            </td>
+            <td>{{ entry.user.display_name }}</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(entry.total) }} THC</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

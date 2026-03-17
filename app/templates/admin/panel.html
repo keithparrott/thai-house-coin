@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+{% block content %}
+<h1>Admin Panel</h1>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="margin-bottom: 0;">Users</h2>
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">Create User</a>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Username</th><th>Display Name</th><th>Role</th><th>Active</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.display_name }}</td>
+            <td>{% if user.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
+            <td>{{ 'Yes' if user.is_active else 'No' }}</td>
+            <td>
+                <a href="{{ url_for('admin.reset_password', user_id=user.id) }}" class="btn btn-outline btn-sm">Reset PW</a>
+                <form method="POST" action="{{ url_for('admin.toggle_active', user_id=user.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline btn-sm">
+                        {{ 'Deactivate' if user.is_active else 'Activate' }}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
