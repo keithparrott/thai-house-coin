@@ -16,10 +16,26 @@
 
 body {
     font-family: 'Lato', sans-serif;
-    background: var(--cream);
     color: var(--dark);
     line-height: 1.6;
     min-height: 100vh;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: url('../images/bg.jpeg') center / cover no-repeat fixed;
+    opacity: 0.15;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: var(--cream);
 }
 
 h1, h2, h3, h4 {
