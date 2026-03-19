@@ -19,11 +19,14 @@ def index():
     ).all()
     total_balance = sum(b.amount for b in balances)
 
-    pending_redemptions_in = Redemption.query.filter_by(
-        target_id=current_user.id, status='pending'
+    lunches_eaten = Redemption.query.filter_by(
+        requester_id=current_user.id, status='accepted'
     ).count()
-    pending_redemptions_out = Redemption.query.filter_by(
-        requester_id=current_user.id, status='pending'
+    lunches_given = Redemption.query.filter_by(
+        target_id=current_user.id, status='accepted'
+    ).count()
+    bounties_completed = BountyClaim.query.filter_by(
+        claimant_id=current_user.id, status='approved'
     ).count()
 
     pending_bounties = Bounty.query.filter_by(
@@ -33,6 +36,10 @@ def index():
     pending_redemptions = Redemption.query.filter_by(
         target_id=current_user.id, status='pending'
     ).order_by(Redemption.created_at.desc()).all()
+
+    open_bounties = Bounty.query.filter(
+        Bounty.status.in_(['open', 'pending'])
+    ).order_by(Bounty.created_at.desc()).all()
 
     recent_txns = Transaction.query.filter(
         db.or_(
@@ -46,8 +53,10 @@ def index():
     return render_template('dashboard.html',
                            total_balance=total_balance,
                            all_sources=all_sources,
-                           pending_redemptions_in=pending_redemptions_in,
-                           pending_redemptions_out=pending_redemptions_out,
+                           lunches_eaten=lunches_eaten,
+                           lunches_given=lunches_given,
+                           bounties_completed=bounties_completed,
                            pending_bounties=pending_bounties,
                            pending_redemptions=pending_redemptions,
+                           open_bounties=open_bounties,
                            recent_txns=recent_txns)

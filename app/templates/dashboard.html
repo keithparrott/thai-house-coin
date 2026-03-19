@@ -9,12 +9,16 @@
         <div class="stat-label">Total THC</div>
     </div>
     <div class="stat-box">
-        <div class="stat-value">{{ pending_redemptions_in }}</div>
-        <div class="stat-label">Incoming Redemptions</div>
+        <div class="stat-value">{{ lunches_eaten }}</div>
+        <div class="stat-label">Thai Lunches Eaten</div>
     </div>
     <div class="stat-box">
-        <div class="stat-value">{{ pending_redemptions_out }}</div>
-        <div class="stat-label">Outgoing Redemptions</div>
+        <div class="stat-value">{{ bounties_completed }}</div>
+        <div class="stat-label">Bounties Completed</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ lunches_given }}</div>
+        <div class="stat-label">Thai Lunches Given</div>
     </div>
 </div>
 
@@ -81,6 +85,32 @@
 
     {% else %}
     <p style="color: #666;">No items awaiting your approval.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Open Bounties</h2>
+    {% if open_bounties %}
+    {% for bounty in open_bounties %}
+    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 1rem;">
+                    <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
+                </h3>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
+                    Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
+                </p>
+            </div>
+            <div style="text-align: right;">
+                <span class="thc-amount">{{ "%.2f"|format(bounty.reward_amount) }} THC</span><br>
+                <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color: #666;">No open bounties right now.</p>
     {% endif %}
 </div>
 
