@@ -13,7 +13,7 @@ bounty_bp = Blueprint('bounty', __name__, url_prefix='/bounty')
 @login_required
 def board():
     bounties = Bounty.query.order_by(
-        db.case((Bounty.status == 'open', 0), else_=1),
+        db.case((Bounty.status.in_(['open', 'pending']), 0), else_=1),
         Bounty.created_at.desc()
     ).all()
     return render_template('bounty/board.html', bounties=bounties)

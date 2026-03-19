@@ -23,7 +23,7 @@ def create_bounty(poster_id, title, description, reward_amount):
 
 def submit_claim(bounty_id, claimant_id, message):
     bounty = db.session.get(Bounty, bounty_id)
-    if not bounty or bounty.status != 'open':
+    if not bounty or bounty.status not in ('open', 'pending'):
         raise ValueError('Bounty is not open.')
     if bounty.poster_id == claimant_id:
         raise ValueError('You cannot claim your own bounty.')
@@ -44,6 +44,7 @@ def submit_claim(bounty_id, claimant_id, message):
         message=message
     )
     db.session.add(claim)
+    bounty.status = 'pending'
     db.session.flush()
     return claim
 
@@ -55,7 +56,7 @@ def approve_claim(claim_id, poster_id):
     bounty = claim.bounty
     if bounty.poster_id != poster_id:
         raise ValueError('Only the poster can approve claims.')
-    if bounty.status != 'open':
+    if bounty.status not in ('open', 'pending'):
         raise ValueError('Bounty is no longer open.')
     if claim.status != 'pending':
         raise ValueError('Claim is not pending.')
@@ -93,6 +94,13 @@ def reject_claim(claim_id, poster_id):
         raise ValueError('Claim is not pending.')
 
     claim.status = 'rejected'
+
+    # If no pending claims remain, revert bounty to open
+    bounty = claim.bounty
+    remaining = BountyClaim.query.filter_by(bounty_id=bounty.id, status='pending').count()
+    if remaining == 0:
+        bounty.status = 'open'
+
     db.session.flush()
     return claim
 
@@ -101,12 +109,11 @@ def cancel_bounty(bounty_id, poster_id):
     bounty = db.session.get(Bounty, bounty_id)
     if not bounty or bounty.poster_id != poster_id:
         raise ValueError('Not your bounty.')
-    if bounty.status != 'open':
+    if bounty.status not in ('open', 'pending'):
         raise ValueError('Can only cancel open bounties.')
 
-    pending = BountyClaim.query.filter_by(bounty_id=bounty_id, status='pending').count()
-    if pending > 0:
-        raise ValueError('Cannot cancel a bounty with pending claims.')
+    # Reject any pending claims on cancellation
+    BountyClaim.query.filter_by(bounty_id=bounty_id, status='pending').update({'status': 'rejected'})
 
     bounty.status = 'cancelled'
     db.session.flush()

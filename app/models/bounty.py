@@ -11,7 +11,7 @@ class Bounty(db.Model):
     title = db.Column(db.String(256), nullable=False)
     description = db.Column(db.Text, default='')
     reward_amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(32), nullable=False, default='open')  # open, completed, cancelled
+    status = db.Column(db.String(32), nullable=False, default='open')  # open, pending, completed, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at = db.Column(db.DateTime, nullable=True)
 
