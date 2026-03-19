@@ -6,7 +6,7 @@
     <a href="{{ url_for('bounty.create') }}" class="btn btn-gold">Post Bounty</a>
 </div>
 
-{% for bounty in bounties %}
+{% macro bounty_card(bounty) %}
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: start;">
         <div>
@@ -26,7 +26,30 @@
     <p style="margin-top: 0.5rem;">{{ bounty.description[:200] }}{% if bounty.description|length > 200 %}...{% endif %}</p>
     {% endif %}
 </div>
-{% else %}
+{% endmacro %}
+
+{% if not pending and not open_bounties and not completed %}
 <div class="card"><p>No bounties yet. Be the first to post one!</p></div>
+{% endif %}
+
+{% if pending %}
+<h2 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Pending</h2>
+{% for bounty in pending %}
+    {{ bounty_card(bounty) }}
 {% endfor %}
+{% endif %}
+
+{% if open_bounties %}
+<h2 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Open</h2>
+{% for bounty in open_bounties %}
+    {{ bounty_card(bounty) }}
+{% endfor %}
+{% endif %}
+
+{% if completed %}
+<h2 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Completed</h2>
+{% for bounty in completed %}
+    {{ bounty_card(bounty) }}
+{% endfor %}
+{% endif %}
 {% endblock %}

@@ -12,11 +12,10 @@ bounty_bp = Blueprint('bounty', __name__, url_prefix='/bounty')
 @bounty_bp.route('/')
 @login_required
 def board():
-    bounties = Bounty.query.order_by(
-        db.case((Bounty.status.in_(['open', 'pending']), 0), else_=1),
-        Bounty.created_at.desc()
-    ).all()
-    return render_template('bounty/board.html', bounties=bounties)
+    pending = Bounty.query.filter_by(status='pending').order_by(Bounty.created_at.desc()).all()
+    open_bounties = Bounty.query.filter_by(status='open').order_by(Bounty.created_at.desc()).all()
+    completed = Bounty.query.filter(Bounty.status.in_(['completed', 'cancelled'])).order_by(Bounty.created_at.desc()).all()
+    return render_template('bounty/board.html', pending=pending, open_bounties=open_bounties, completed=completed)
 
 
 @bounty_bp.route('/create', methods=['GET', 'POST'])
