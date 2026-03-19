@@ -41,11 +41,11 @@ def index():
         )
     ).order_by(Transaction.created_at.desc()).limit(10).all()
 
-    top_sources = sorted(balances, key=lambda b: b.amount, reverse=True)[:5]
+    all_sources = sorted(balances, key=lambda b: b.amount, reverse=True)
 
     return render_template('dashboard.html',
                            total_balance=total_balance,
-                           top_sources=top_sources,
+                           all_sources=all_sources,
                            pending_redemptions_in=pending_redemptions_in,
                            pending_redemptions_out=pending_redemptions_out,
                            pending_bounties=pending_bounties,
