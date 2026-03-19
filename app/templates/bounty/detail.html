@@ -61,11 +61,11 @@
         <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
             <form method="POST" action="{{ url_for('bounty.approve_claim', claim_id=claim.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                <button type="submit" class="btn btn-success btn-sm">Approve</button>
             </form>
             <form method="POST" action="{{ url_for('bounty.reject_claim', claim_id=claim.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline btn-sm">Reject</button>
+                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
             </form>
         </div>
         {% endif %}

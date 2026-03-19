@@ -148,6 +148,8 @@ nav .nav-user {
 .btn-primary:hover { background: #A31830; color: white; }
 .btn-gold { background: var(--gold); color: white; }
 .btn-gold:hover { background: #B8890F; color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #1B5E20; color: white; }
 .btn-danger { background: var(--error); color: white; }
 .btn-danger:hover { background: #8E1C1C; }
 .btn-outline {

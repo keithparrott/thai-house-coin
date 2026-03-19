@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from app.models.balance import Balance
 from app.models.transaction import Transaction
 from app.models.redemption import Redemption
-from app.models.bounty import BountyClaim
+from app.models.bounty import Bounty, BountyClaim
 from app.extensions import db
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -26,13 +26,9 @@ def index():
         requester_id=current_user.id, status='pending'
     ).count()
 
-    pending_claims = BountyClaim.query.join(BountyClaim.bounty).filter(
-        BountyClaim.status == 'pending',
-        db.or_(
-            BountyClaim.claimant_id == current_user.id,
-            BountyClaim.bounty.has(poster_id=current_user.id)
-        )
-    ).count()
+    pending_bounties = Bounty.query.filter_by(
+        poster_id=current_user.id, status='pending'
+    ).order_by(Bounty.created_at.desc()).all()
 
     recent_txns = Transaction.query.filter(
         db.or_(
@@ -48,5 +44,5 @@ def index():
                            top_sources=top_sources,
                            pending_redemptions_in=pending_redemptions_in,
                            pending_redemptions_out=pending_redemptions_out,
-                           pending_claims=pending_claims,
+                           pending_bounties=pending_bounties,
                            recent_txns=recent_txns)

@@ -16,15 +16,50 @@
         <div class="stat-value">{{ pending_redemptions_out }}</div>
         <div class="stat-label">Outgoing Redemptions</div>
     </div>
-    <div class="stat-box">
-        <div class="stat-value">{{ pending_claims }}</div>
-        <div class="stat-label">Pending Claims</div>
-    </div>
 </div>
 
-{% if top_sources %}
+<div class="card">
+    <h2>Claims Requiring Your Approval</h2>
+    {% if pending_bounties %}
+    {% for bounty in pending_bounties %}
+    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1rem;">
+                <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
+                <span class="thc-amount" style="font-size: 0.9rem; margin-left: 0.5rem;">{{ "%.2f"|format(bounty.reward_amount) }} THC</span>
+            </h3>
+        </div>
+        {% for claim in bounty.claims.filter_by(status='pending').all() %}
+        <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-gold); border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{{ claim.claimant.display_name }}</strong>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 0.5rem;">{{ claim.submitted_at.strftime('%b %d, %H:%M') }}</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <form method="POST" action="{{ url_for('bounty.approve_claim', claim_id=claim.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('bounty.reject_claim', claim_id=claim.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </div>
+            </div>
+            <p style="margin: 0.3rem 0 0; font-size: 0.9rem;">{{ claim.message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color: #666;">No claims awaiting your approval.</p>
+    {% endif %}
+</div>
+
 <div class="card">
     <h2>Top Sources</h2>
+    {% if top_sources %}
     <table>
         <thead><tr><th>From</th><th>Amount</th></tr></thead>
         <tbody>
@@ -36,12 +71,14 @@
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p style="color: #666;">No balances yet.</p>
+    {% endif %}
 </div>
-{% endif %}
 
-{% if recent_txns %}
 <div class="card">
     <h2>Recent Activity</h2>
+    {% if recent_txns %}
     <table>
         <thead><tr><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>When</th></tr></thead>
         <tbody>
@@ -56,6 +93,8 @@
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p style="color: #666;">No recent activity.</p>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}
