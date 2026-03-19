@@ -30,6 +30,10 @@ def index():
         poster_id=current_user.id, status='pending'
     ).order_by(Bounty.created_at.desc()).all()
 
+    pending_redemptions = Redemption.query.filter_by(
+        target_id=current_user.id, status='pending'
+    ).order_by(Redemption.created_at.desc()).all()
+
     recent_txns = Transaction.query.filter(
         db.or_(
             Transaction.from_user_id == current_user.id,
@@ -45,4 +49,5 @@ def index():
                            pending_redemptions_in=pending_redemptions_in,
                            pending_redemptions_out=pending_redemptions_out,
                            pending_bounties=pending_bounties,
+                           pending_redemptions=pending_redemptions,
                            recent_txns=recent_txns)

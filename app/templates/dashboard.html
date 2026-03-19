@@ -19,12 +19,14 @@
 </div>
 
 <div class="card">
-    <h2>Claims Requiring Your Approval</h2>
-    {% if pending_bounties %}
+    <h2>Items Requiring Your Approval</h2>
+    {% if pending_bounties or pending_redemptions %}
+
     {% for bounty in pending_bounties %}
     <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0; font-size: 1rem;">
+                <span class="badge badge-pending" style="font-size: 0.75rem;">Bounty Claim</span>
                 <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
                 <span class="thc-amount" style="font-size: 0.9rem; margin-left: 0.5rem;">{{ "%.2f"|format(bounty.reward_amount) }} THC</span>
             </h3>
@@ -52,8 +54,33 @@
         {% endfor %}
     </div>
     {% endfor %}
+
+    {% for redemption in pending_redemptions %}
+    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span class="badge badge-pending" style="font-size: 0.75rem;">Redemption</span>
+                <strong>{{ redemption.requester.display_name }}</strong>
+                <span style="font-size: 0.85rem; color: #666;">wants to redeem</span>
+                <span class="thc-amount" style="font-size: 0.9rem;">{{ "%.2f"|format(redemption.amount) }} THC</span>
+                <span style="font-size: 0.8rem; color: #666; margin-left: 0.5rem;">{{ redemption.created_at.strftime('%b %d, %H:%M') }}</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <form method="POST" action="{{ url_for('redemption.accept', redemption_id=redemption.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('redemption.decline', redemption_id=redemption.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
     {% else %}
-    <p style="color: #666;">No claims awaiting your approval.</p>
+    <p style="color: #666;">No items awaiting your approval.</p>
     {% endif %}
 </div>
 
