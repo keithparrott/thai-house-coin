@@ -19,7 +19,7 @@
         {% if current_user.is_admin %}
         <a href="{{ url_for('admin.panel') }}">Admin</a>
         {% endif %}
-        <span class="nav-user">{{ current_user.display_name }}</span>
+        <a href="{{ url_for('profile.view', user_id=current_user.id) }}" class="nav-user">{{ current_user.display_name }}</a>
         <a href="{{ url_for('auth.logout') }}">Logout</a>
     </nav>
     {% endif %}

@@ -5,8 +5,8 @@
     <h2>Invalidate Transaction #{{ txn.id }}</h2>
     <table>
         <tr><th>Type</th><td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td></tr>
-        <tr><th>From</th><td>{{ txn.from_user.display_name }}</td></tr>
-        <tr><th>To</th><td>{{ txn.to_user.display_name }}</td></tr>
+        <tr><th>From</th><td><a href="{{ url_for('profile.view', user_id=txn.from_user_id) }}">{{ txn.from_user.display_name }}</a></td></tr>
+        <tr><th>To</th><td><a href="{{ url_for('profile.view', user_id=txn.to_user_id) }}">{{ txn.to_user.display_name }}</a></td></tr>
         <tr><th>Amount</th><td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }} THC</span></td></tr>
         <tr><th>Date</th><td>{{ txn.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
         <tr><th>Memo</th><td>{{ txn.memo or '—' }}</td></tr>

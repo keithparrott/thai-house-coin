@@ -7,6 +7,7 @@ def register_blueprints(app):
     from app.routes.ledger import ledger_bp
     from app.routes.redemption import redemption_bp
     from app.routes.leaderboard import leaderboard_bp
+    from app.routes.profile import profile_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -16,3 +17,4 @@ def register_blueprints(app):
     app.register_blueprint(ledger_bp)
     app.register_blueprint(redemption_bp)
     app.register_blueprint(leaderboard_bp)
+    app.register_blueprint(profile_bp)

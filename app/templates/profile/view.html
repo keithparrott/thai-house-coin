@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ user.display_name }} — Profile{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.2rem;">{{ user.display_name }}</h1>
+            <p style="color: #666;">
+                @{{ user.username }}
+                {% if user.is_admin %}<span class="badge badge-pending" style="font-size: 0.7rem;">admin</span>{% endif %}
+                {% if not user.is_active %}<span class="badge badge-cancelled" style="font-size: 0.7rem;">inactive</span>{% endif %}
+            </p>
+            <p style="font-size: 0.85rem; color: #666;">Member since {{ user.created_at.strftime('%b %d, %Y') }}</p>
+            {% if is_self and user.email %}
+            <p style="font-size: 0.85rem; color: #666;">{{ user.email }} <span style="font-size: 0.75rem;">(only you and admins can see this)</span></p>
+            {% endif %}
+        </div>
+        {% if is_self %}
+        <a href="{{ url_for('profile.edit') }}" class="btn btn-outline btn-sm">Edit Profile</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if relationship %}
+<div class="card">
+    <h2>You &amp; {{ user.display_name }}</h2>
+    <table>
+        <thead><tr><th>You owe them...</th><th>They owe you...</th><th></th></tr></thead>
+        <tbody>
+        <tr>
+            <td>
+                {% if relationship.you_owe_them > 0 %}
+                <span class="thc-amount">{{ "%.2f"|format(relationship.you_owe_them) }} THC</span>
+                {% if relationship.you_owe_them >= 1.0 %}<span class="badge badge-pending" style="font-size: 0.7rem; margin-left: 0.3rem;">redeemable by them</span>{% endif %}
+                {% else %}—{% endif %}
+            </td>
+            <td>
+                {% if relationship.they_owe_you > 0 %}
+                <span class="thc-amount">{{ "%.2f"|format(relationship.they_owe_you) }} THC</span>
+                {% else %}—{% endif %}
+            </td>
+            <td style="text-align: right;">
+                {% if relationship.they_owe_you >= 1.0 %}
+                <form method="POST" action="{{ url_for('redemption.request_redemption') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="target" value="{{ user.id }}">
+                    <button type="submit" class="btn btn-success btn-sm">Redeem</button>
+                </form>
+                {% endif %}
+                <a href="{{ url_for('wallet.send') }}" class="btn btn-gold btn-sm">Send THC</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="stat-value">{{ stats.lunches_eaten }}</div>
+        <div class="stat-label">Thai Lunches Eaten</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ stats.lunches_given }}</div>
+        <div class="stat-label">Thai Lunches Given</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ stats.lunches_owed }}</div>
+        <div class="stat-label">Lunches Owed</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value">{{ stats.lunches_redeemable }}</div>
+        <div class="stat-label">Redeemable Lunches</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Economy</h2>
+    <table>
+        <tbody>
+        <tr>
+            <td>Holdings</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(stats.holdings) }} THC</span></td>
+        </tr>
+        <tr>
+            <td>Outstanding liabilities</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(stats.liabilities) }} THC</span></td>
+        </tr>
+        <tr>
+            <td>THC minted into circulation</td>
+            <td><span class="thc-amount">{{ "%.2f"|format(stats.thc_minted) }} THC</span></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Bounty Record</h2>
+    <table>
+        <tbody>
+        <tr><td>Bounties posted</td><td>{{ stats.bounties_posted }} ({{ stats.bounties_open }} still open)</td></tr>
+        <tr><td>Bounties completed</td><td>{{ stats.bounties_completed }}</td></tr>
+        <tr><td>Bounties contributed to</td><td>{{ stats.contributions_made }}</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0;">Recent Activity</h2>
+        <a href="{{ url_for('ledger.index', user=user.id) }}" class="btn btn-outline btn-sm">View full ledger</a>
+    </div>
+    {% if recent_txns %}
+    <table style="margin-top: 1rem;">
+        <thead><tr><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>When</th></tr></thead>
+        <tbody>
+        {% for txn in recent_txns %}
+        <tr class="{{ 'invalidated' if txn.is_invalidated }}">
+            <td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.from_user_id) }}">{{ txn.from_user.display_name }}</a></td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.to_user_id) }}">{{ txn.to_user.display_name }}</a></td>
+            <td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }}</span></td>
+            <td>{{ txn.created_at.strftime('%b %d, %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #666;">No activity yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

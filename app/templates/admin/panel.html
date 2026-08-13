@@ -16,7 +16,7 @@
         {% for user in users %}
         <tr>
             <td>{{ user.username }}</td>
-            <td>{{ user.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=user.id) }}">{{ user.display_name }}</a></td>
             <td>{% if user.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
             <td>{{ 'Yes' if user.is_active else 'No' }}</td>
             <td>

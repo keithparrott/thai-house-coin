@@ -37,10 +37,10 @@
         <tr class="{{ 'invalidated' if txn.is_invalidated }}">
             <td>{{ txn.id }}</td>
             <td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td>
-            <td>{{ txn.from_user.display_name }}</td>
-            <td>{{ txn.to_user.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.from_user_id) }}">{{ txn.from_user.display_name }}</a></td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.to_user_id) }}">{{ txn.to_user.display_name }}</a></td>
             <td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }}</span></td>
-            <td style="font-size: 0.8rem;">{{ txn.memo or '—' }}{% if txn.is_invalidated %}<br><em>Invalidated by {{ txn.invalidated_by_user.display_name }} on {{ txn.invalidated_at.strftime('%b %d') }}</em>{% endif %}</td>
+            <td style="font-size: 0.8rem;">{{ txn.memo or '—' }}{% if txn.is_invalidated %}<br><em>Invalidated by <a href="{{ url_for('profile.view', user_id=txn.invalidated_by) }}">{{ txn.invalidated_by_user.display_name }}</a> on {{ txn.invalidated_at.strftime('%b %d') }}</em>{% endif %}</td>
             <td>{{ txn.created_at.strftime('%b %d, %H:%M') }}</td>
             {% if current_user.is_admin %}
             <td>

@@ -19,7 +19,7 @@
         <tbody>
         {% for row in matrix %}
         <tr>
-            <td>{{ row.user.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=row.user.id) }}">{{ row.user.display_name }}</a></td>
             <td>
                 {% if row.you_owe_them > 0 %}
                 <span class="thc-amount">{{ "%.2f"|format(row.you_owe_them) }} THC</span>

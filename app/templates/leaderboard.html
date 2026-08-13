@@ -12,7 +12,7 @@
             <td style="font-weight: 700;">
                 {% if loop.index == 1 %}&#x1F947;{% elif loop.index == 2 %}&#x1F948;{% elif loop.index == 3 %}&#x1F949;{% else %}{{ loop.index }}{% endif %}
             </td>
-            <td>{{ entry.user.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=entry.user.id) }}">{{ entry.user.display_name }}</a></td>
             <td><span class="thc-amount">{{ "%.2f"|format(entry.total) }} THC</span></td>
         </tr>
         {% endfor %}

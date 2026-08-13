@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.transaction import Transaction
 from app.forms.admin_forms import CreateUserForm, ResetPasswordForm
 from app.services.balance_service import rebuild_all_balances
+from app.services import user_service
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -38,6 +39,8 @@ def create_user():
     if form.validate_on_submit():
         if User.query.filter_by(username=form.username.data).first():
             flash('Username already exists.', 'error')
+        elif user_service.display_name_taken(form.display_name.data):
+            flash('That display name is already in use.', 'error')
         else:
             user = User(
                 username=form.username.data,

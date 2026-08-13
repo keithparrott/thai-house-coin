@@ -39,7 +39,7 @@
         <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--light-gold); border-radius: 4px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <strong>{{ claim.claimant.display_name }}</strong>
+                    <strong><a href="{{ url_for('profile.view', user_id=claim.claimant_id) }}">{{ claim.claimant.display_name }}</a></strong>
                     <span style="font-size: 0.8rem; color: #666; margin-left: 0.5rem;">{{ claim.submitted_at.strftime('%b %d, %H:%M') }}</span>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
@@ -64,7 +64,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <span class="badge badge-pending" style="font-size: 0.75rem;">Redemption</span>
-                <strong>{{ redemption.requester.display_name }}</strong>
+                <strong><a href="{{ url_for('profile.view', user_id=redemption.requester_id) }}">{{ redemption.requester.display_name }}</a></strong>
                 <span style="font-size: 0.85rem; color: #666;">wants to redeem</span>
                 <span class="thc-amount" style="font-size: 0.9rem;">{{ "%.2f"|format(redemption.amount) }} THC</span>
                 <span style="font-size: 0.8rem; color: #666; margin-left: 0.5rem;">{{ redemption.created_at.strftime('%b %d, %H:%M') }}</span>
@@ -99,7 +99,7 @@
                     <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
                 </h3>
                 <p style="font-size: 0.8rem; color: #666; margin-top: 0.2rem;">
-                    Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
+                    Posted by <a href="{{ url_for('profile.view', user_id=bounty.poster_id) }}">{{ bounty.poster.display_name }}</a> &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
                 </p>
             </div>
             <div style="text-align: right;">
@@ -123,8 +123,8 @@
         {% for txn in recent_txns %}
         <tr class="{{ 'invalidated' if txn.is_invalidated }}">
             <td><span class="badge badge-{{ txn.type }}">{{ txn.type }}</span></td>
-            <td>{{ txn.from_user.display_name }}</td>
-            <td>{{ txn.to_user.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.from_user_id) }}">{{ txn.from_user.display_name }}</a></td>
+            <td><a href="{{ url_for('profile.view', user_id=txn.to_user_id) }}">{{ txn.to_user.display_name }}</a></td>
             <td><span class="thc-amount">{{ "%.2f"|format(txn.amount) }}</span></td>
             <td>{{ txn.created_at.strftime('%b %d, %H:%M') }}</td>
         </tr>

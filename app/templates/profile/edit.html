@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 3rem auto;">
+    <h2>Edit Profile</h2>
+    <p style="margin-bottom: 1rem; color: #666; font-size: 0.9rem;">
+        Your login username (@{{ current_user.username }}) can't be changed here — ask an admin.
+    </p>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.display_name.label }}
+            {{ form.display_name() }}
+            {% for error in form.display_name.errors %}
+            <p style="color: var(--warm-red); font-size: 0.85rem;">{{ error }}</p>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(placeholder="you@example.com") }}
+            {% for error in form.email.errors %}
+            <p style="color: var(--warm-red); font-size: 0.85rem;">{{ error }}</p>
+            {% endfor %}
+            <p style="font-size: 0.8rem; color: #666;">Optional. Only you and admins can see it. Will be used for notifications later.</p>
+        </div>
+        {{ form.submit(class="btn btn-primary", style="width: 100%;") }}
+    </form>
+    <a href="{{ url_for('auth.change_password') }}" style="display: block; margin-top: 1rem; font-size: 0.9rem;">Change password</a>
+</div>
+{% endblock %}

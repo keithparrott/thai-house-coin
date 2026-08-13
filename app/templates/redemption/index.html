@@ -26,7 +26,7 @@
         <tbody>
         {% for r in incoming %}
         <tr>
-            <td>{{ r.requester.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=r.requester_id) }}">{{ r.requester.display_name }}</a></td>
             <td><span class="thc-amount">{{ "%.2f"|format(r.amount) }} THC</span></td>
             <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
             <td>{{ r.created_at.strftime('%b %d, %Y') }}</td>
@@ -61,7 +61,7 @@
         <tbody>
         {% for r in outgoing %}
         <tr>
-            <td>{{ r.target.display_name }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=r.target_id) }}">{{ r.target.display_name }}</a></td>
             <td><span class="thc-amount">{{ "%.2f"|format(r.amount) }} THC</span></td>
             <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
             <td>{{ r.created_at.strftime('%b %d, %Y') }}</td>

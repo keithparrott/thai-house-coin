@@ -5,7 +5,7 @@
     <div style="display: flex; justify-content: space-between; align-items: start;">
         <div>
             <h1 style="font-size: 1.5rem;">{{ bounty.title }}</h1>
-            <p style="color: #666;">Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y %H:%M') }}</p>
+            <p style="color: #666;">Posted by <a href="{{ url_for('profile.view', user_id=bounty.poster_id) }}">{{ bounty.poster.display_name }}</a> &middot; {{ bounty.created_at.strftime('%b %d, %Y %H:%M') }}</p>
             {% if bounty.contributor_count > 0 %}
             <p style="font-size: 0.85rem; color: #666;">{{ bounty.contributor_count }} contributor{{ 's' if bounty.contributor_count != 1 }} upped the ante</p>
             {% endif %}
@@ -69,7 +69,7 @@
     {% for claim in claims %}
     <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong>{{ claim.claimant.display_name }}</strong>
+            <strong><a href="{{ url_for('profile.view', user_id=claim.claimant_id) }}">{{ claim.claimant.display_name }}</a></strong>
             <span class="badge badge-{{ claim.status }}">{{ claim.status }}</span>
         </div>
         <p style="margin: 0.5rem 0; font-size: 0.9rem;">{{ claim.message }}</p>

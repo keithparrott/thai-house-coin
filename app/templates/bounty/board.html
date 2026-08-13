@@ -14,7 +14,7 @@
                 <a href="{{ url_for('bounty.detail', bounty_id=bounty.id) }}">{{ bounty.title }}</a>
             </h3>
             <p style="font-size: 0.85rem; color: #666;">
-                Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
+                Posted by <a href="{{ url_for('profile.view', user_id=bounty.poster_id) }}">{{ bounty.poster.display_name }}</a> &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
             </p>
             {% if bounty.contributor_count > 0 %}
             <p style="font-size: 0.8rem; color: #666;">{{ bounty.contributor_count }} contributor{{ 's' if bounty.contributor_count != 1 }} upped the ante</p>
