@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 
 from app.extensions import db
 from app.models.bounty import Bounty, BountyClaim
-from app.forms.bounty_forms import CreateBountyForm, SubmitClaimForm
+from app.forms.bounty_forms import CreateBountyForm, SubmitClaimForm, ContributeForm
 from app.services import bounty_service
 
 bounty_bp = Blueprint('bounty', __name__, url_prefix='/bounty')
@@ -46,7 +46,9 @@ def detail(bounty_id):
         flash('Bounty not found.', 'error')
         return redirect(url_for('bounty.board'))
     claim_form = SubmitClaimForm()
-    return render_template('bounty/detail.html', bounty=bounty, claim_form=claim_form)
+    contribute_form = ContributeForm()
+    return render_template('bounty/detail.html', bounty=bounty, claim_form=claim_form,
+                           contribute_form=contribute_form)
 
 
 @bounty_bp.route('/<int:bounty_id>/claim', methods=['POST'])
@@ -62,6 +64,24 @@ def submit_claim(bounty_id):
             )
             db.session.commit()
             flash('Claim submitted!', 'success')
+        except ValueError as e:
+            flash(str(e), 'error')
+    return redirect(url_for('bounty.detail', bounty_id=bounty_id))
+
+
+@bounty_bp.route('/<int:bounty_id>/contribute', methods=['POST'])
+@login_required
+def contribute(bounty_id):
+    form = ContributeForm()
+    if form.validate_on_submit():
+        try:
+            bounty_service.contribute_to_bounty(
+                bounty_id=bounty_id,
+                contributor_id=current_user.id,
+                amount=round(form.amount.data, 2)
+            )
+            db.session.commit()
+            flash('Thanks for upping the ante!', 'success')
         except ValueError as e:
             flash(str(e), 'error')
     return redirect(url_for('bounty.detail', bounty_id=bounty_id))

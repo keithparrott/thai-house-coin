@@ -16,9 +16,12 @@
             <p style="font-size: 0.85rem; color: #666;">
                 Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y') }}
             </p>
+            {% if bounty.contributor_count > 0 %}
+            <p style="font-size: 0.8rem; color: #666;">{{ bounty.contributor_count }} contributor{{ 's' if bounty.contributor_count != 1 }} upped the ante</p>
+            {% endif %}
         </div>
         <div style="text-align: right;">
-            <span class="thc-amount" style="font-size: 1.3rem;">{{ "%.2f"|format(bounty.reward_amount) }} THC</span><br>
+            <span class="thc-amount" style="font-size: 1.3rem;">{{ "%.2f"|format(bounty.total_reward) }} THC</span><br>
             <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
         </div>
     </div>

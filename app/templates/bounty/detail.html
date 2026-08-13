@@ -6,9 +6,12 @@
         <div>
             <h1 style="font-size: 1.5rem;">{{ bounty.title }}</h1>
             <p style="color: #666;">Posted by {{ bounty.poster.display_name }} &middot; {{ bounty.created_at.strftime('%b %d, %Y %H:%M') }}</p>
+            {% if bounty.contributor_count > 0 %}
+            <p style="font-size: 0.85rem; color: #666;">{{ bounty.contributor_count }} contributor{{ 's' if bounty.contributor_count != 1 }} upped the ante</p>
+            {% endif %}
         </div>
         <div style="text-align: right;">
-            <span class="thc-amount large">{{ "%.2f"|format(bounty.reward_amount) }}</span>
+            <span class="thc-amount large">{{ "%.2f"|format(bounty.total_reward) }}</span>
             <div style="font-size: 0.8rem; color: #666;">THC Reward</div>
             <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
         </div>
@@ -29,6 +32,21 @@
     </div>
     {% endif %}
 </div>
+
+{% if bounty.status in ['open', 'pending'] and bounty.poster_id != current_user.id %}
+<div class="card">
+    <h2>Up the Ante</h2>
+    <p style="font-size: 0.9rem; color: #666;">Sweeten the pot — your contribution mints separately and is source-tagged to you when the bounty is completed.</p>
+    <form method="POST" action="{{ url_for('bounty.contribute', bounty_id=bounty.id) }}">
+        {{ contribute_form.hidden_tag() }}
+        <div class="form-group">
+            {{ contribute_form.amount.label }}
+            {{ contribute_form.amount(placeholder="0.01 - 5.00") }}
+        </div>
+        {{ contribute_form.submit(class="btn btn-gold") }}
+    </form>
+</div>
+{% endif %}
 
 {% if bounty.status in ['open', 'pending'] and bounty.poster_id != current_user.id %}
 <div class="card">

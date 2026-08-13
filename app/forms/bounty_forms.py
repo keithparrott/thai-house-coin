@@ -15,3 +15,10 @@ class CreateBountyForm(FlaskForm):
 class SubmitClaimForm(FlaskForm):
     message = TextAreaField('Proof / Message', validators=[DataRequired(), Length(min=1, max=1000)])
     submit = SubmitField('Submit Claim')
+
+
+class ContributeForm(FlaskForm):
+    amount = FloatField('Additional Reward (THC)', validators=[
+        DataRequired(), NumberRange(min=0.01, max=5.0, message='Contribution must be between 0.01 and 5.0 THC.')
+    ])
+    submit = SubmitField('Contribute')

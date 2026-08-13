@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 
 from app.extensions import db
-from app.models.bounty import Bounty, BountyClaim
+from app.models.bounty import Bounty, BountyClaim, BountyContribution
 from app.services import transaction_service
 
 
@@ -49,6 +49,32 @@ def submit_claim(bounty_id, claimant_id, message):
     return claim
 
 
+def contribute_to_bounty(bounty_id, contributor_id, amount):
+    bounty = db.session.get(Bounty, bounty_id)
+    if not bounty:
+        raise ValueError('Bounty not found.')
+    if bounty.poster_id == contributor_id:
+        raise ValueError('You cannot contribute to your own bounty.')
+    if bounty.status not in ('open', 'pending'):
+        raise ValueError('This bounty is no longer accepting contributions.')
+
+    contribution = BountyContribution.query.filter_by(
+        bounty_id=bounty_id, contributor_id=contributor_id
+    ).first()
+    if contribution:
+        contribution.amount = round(contribution.amount + amount, 2)
+    else:
+        contribution = BountyContribution(
+            bounty_id=bounty_id,
+            contributor_id=contributor_id,
+            amount=amount
+        )
+        db.session.add(contribution)
+
+    db.session.flush()
+    return contribution
+
+
 def approve_claim(claim_id, poster_id):
     claim = db.session.get(BountyClaim, claim_id)
     if not claim:
@@ -72,13 +98,24 @@ def approve_claim(claim_id, poster_id):
         BountyClaim.status == 'pending'
     ).update({'status': 'rejected'})
 
-    # Mint THC
+    # Mint THC from the original poster's reward
     transaction_service.record_bounty_payout(
         poster_id=bounty.poster_id,
         claimant_id=claim.claimant_id,
         amount=bounty.reward_amount,
         memo=f'Bounty: {bounty.title}'
     )
+
+    # Mint THC from each contributor, source-tagged to them individually
+    # so it remains separately redeemable (see source-tagged balance model).
+    for contribution in bounty.contributions.all():
+        if contribution.amount > 0:
+            transaction_service.record_bounty_payout(
+                poster_id=contribution.contributor_id,
+                claimant_id=claim.claimant_id,
+                amount=contribution.amount,
+                memo=f'Bounty contribution: {bounty.title}'
+            )
 
     db.session.flush()
     return claim
