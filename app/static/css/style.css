@@ -198,6 +198,7 @@ tr:hover { background: rgba(245,230,200,0.3); }
 .badge-accepted { background: #E8F5E9; color: var(--success); }
 .badge-declined { background: #FFEBEE; color: var(--error); }
 .badge-admin { background: var(--gold); color: white; }
+.badge-mint_send { background: var(--gold); color: white; }
 
 /* THC AMOUNT */
 .thc-amount {

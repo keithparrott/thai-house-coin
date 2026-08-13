@@ -86,6 +86,15 @@ def debit_balance(holder_id, source_id, amount):
         bal.amount = round(bal.amount - amount, 10)
 
 
+def debit_source(holder_id, source_id, amount):
+    """Debit `amount` from one specific source-tagged balance."""
+    bal = Balance.query.filter_by(holder_user_id=holder_id, source_user_id=source_id).first()
+    if not bal or bal.amount + 1e-9 < amount:
+        return False
+    bal.amount = round(bal.amount - amount, 10)
+    return True
+
+
 def debit_fifo(holder_id, amount):
     """Debit `amount` from holder's balances using FIFO (source_user_id ASC)."""
     balances = Balance.query.filter(
@@ -133,13 +142,29 @@ def rebuild_all_balances():
             balances_map[key] = round(val - deduct, 10)
             remaining = round(remaining - deduct, 10)
 
+    def _debit_source_map(holder, source, amt):
+        # Debit only what is actually there, mirroring how the FIFO path
+        # degrades. An upstream payout can be invalidated after the fact,
+        # which would otherwise leave a phantom negative balance behind.
+        key = (holder, source)
+        available = balances_map.get(key, 0.0)
+        deduct = min(available, amt) if available > 0 else 0.0
+        balances_map[key] = round(available - deduct, 10)
+
     for txn in transactions:
         if txn.type == 'bounty_payout':
             # Mint: credit claimant with source=poster
             _credit(txn.to_user_id, txn.from_user_id, txn.amount)
+        elif txn.type == 'mint_send':
+            # Sender mints fresh THC directly to the recipient; nothing is debited.
+            _credit(txn.to_user_id, txn.from_user_id, txn.amount)
         elif txn.type == 'send':
-            # Debit sender FIFO, credit recipient with source=sender
-            _debit_fifo_map(txn.from_user_id, txn.amount)
+            # Debit sender (chosen source if recorded, else legacy FIFO),
+            # credit recipient with source=sender
+            if txn.source_user_id is not None:
+                _debit_source_map(txn.from_user_id, txn.source_user_id, txn.amount)
+            else:
+                _debit_fifo_map(txn.from_user_id, txn.amount)
             _credit(txn.to_user_id, txn.from_user_id, txn.amount)
         elif txn.type == 'burn':
             # Debit specific source from holder

@@ -33,6 +33,7 @@ def test_invalidate_cascading(client, admin_user, regular_user, second_user, thi
     login(client, 'bob', 'password')
     client.post('/wallet/send', data={
         'recipient': third_user.id,
+        'source': regular_user.id,
         'amount': 1.0,
     })
 

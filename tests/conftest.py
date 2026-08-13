@@ -117,11 +117,22 @@ def verify_balance_integrity(app):
                 expected[key] = round(val - deduct, 10)
                 remaining = round(remaining - deduct, 10)
 
+        def _debit_source(holder, source, amt):
+            key = (holder, source)
+            available = expected.get(key, 0.0)
+            deduct = min(available, amt) if available > 0 else 0.0
+            expected[key] = round(available - deduct, 10)
+
         for txn in transactions:
             if txn.type == 'bounty_payout':
                 _credit(txn.to_user_id, txn.from_user_id, txn.amount)
+            elif txn.type == 'mint_send':
+                _credit(txn.to_user_id, txn.from_user_id, txn.amount)
             elif txn.type == 'send':
-                _debit_fifo(txn.from_user_id, txn.amount)
+                if txn.source_user_id is not None:
+                    _debit_source(txn.from_user_id, txn.source_user_id, txn.amount)
+                else:
+                    _debit_fifo(txn.from_user_id, txn.amount)
                 _credit(txn.to_user_id, txn.from_user_id, txn.amount)
             elif txn.type == 'burn':
                 key = (txn.to_user_id, txn.from_user_id)

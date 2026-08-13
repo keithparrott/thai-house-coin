@@ -7,14 +7,106 @@
         {{ form.hidden_tag() }}
         <div class="form-group">
             {{ form.recipient.label }}
-            {{ form.recipient() }}
+            {{ form.recipient(id="send-recipient") }}
+        </div>
+        <div class="form-group">
+            {{ form.source.label }}
+            {{ form.source(id="send-source") }}
+            <p style="font-size: 0.8rem; color: #666;">
+                Which of your balances to draw from. However you pay, the recipient
+                receives it tagged as coming from <strong>you</strong>.
+            </p>
         </div>
         <div class="form-group">
             {{ form.amount.label }}
-            {{ form.amount(placeholder="0.01", step="0.01", min="0.01") }}
+            {{ form.amount(placeholder="0.01", step="0.01", min="0.01", id="send-amount") }}
         </div>
+
+        <div id="send-summary" class="card" style="background: var(--light-gold); padding: 0.75rem; margin-bottom: 1rem; display: none;">
+            <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem;">After this transaction</h3>
+            <div id="send-summary-body" style="font-size: 0.9rem;"></div>
+        </div>
+
         {{ form.submit(class="btn btn-primary") }}
         <a href="{{ url_for('wallet.index') }}" class="btn btn-outline" style="margin-left: 0.5rem;">Cancel</a>
     </form>
 </div>
+
+<script type="application/json" id="send-data">{{ summary_data|tojson }}</script>
+<script>
+(function () {
+    var data = JSON.parse(document.getElementById('send-data').textContent);
+    var recipientEl = document.getElementById('send-recipient');
+    var sourceEl = document.getElementById('send-source');
+    var amountEl = document.getElementById('send-amount');
+    var box = document.getElementById('send-summary');
+    var body = document.getElementById('send-summary-body');
+
+    function fmt(n) { return n.toFixed(2) + ' THC'; }
+
+    function row(label, before, after) {
+        return '<div style="display:flex;justify-content:space-between;gap:1rem;padding:0.15rem 0;">' +
+               '<span>' + label + '</span>' +
+               '<span><strong>' + fmt(before) + '</strong> &rarr; <strong>' + fmt(after) + '</strong></span>' +
+               '</div>';
+    }
+
+    function render() {
+        var amount = parseFloat(amountEl.value);
+        var recipient = data.recipients[recipientEl.value];
+        var isMint = parseInt(sourceEl.value, 10) === data.mintSource;
+        var source = isMint ? null : data.sources[sourceEl.value];
+
+        if (!recipient || isNaN(amount) || amount <= 0 || (!isMint && !source)) {
+            box.style.display = 'none';
+            return;
+        }
+
+        var html = '';
+        var warning = '';
+
+        if (isMint) {
+            html += '<p style="margin:0 0 0.5rem;">You mint <strong>' + fmt(amount) +
+                    '</strong> of new supply and send it to <strong>' + recipient.name + '</strong>.</p>';
+            html += row('Your total balance', data.total, data.total);
+            html += row(recipient.name + "'s balance from you",
+                        recipient.holds_from_you, recipient.holds_from_you + amount);
+            html += '<div style="display:flex;justify-content:space-between;gap:1rem;padding:0.15rem 0;">' +
+                    '<span>New supply created</span><span><strong>+' + fmt(amount) + '</strong></span></div>';
+            if (amount > data.maxMint) {
+                warning = 'You can mint at most ' + fmt(data.maxMint) + ' at a time.';
+            }
+        } else {
+            html += '<p style="margin:0 0 0.5rem;">You send <strong>' + fmt(amount) +
+                    '</strong> to <strong>' + recipient.name + '</strong>, drawn from your <strong>' +
+                    source.name + '</strong> balance.</p>';
+            html += row('Your balance from ' + source.name, source.amount, source.amount - amount);
+            html += row('Your total balance', data.total, data.total - amount);
+            html += row(recipient.name + "'s balance from you",
+                        recipient.holds_from_you, recipient.holds_from_you + amount);
+            if (amount > source.amount) {
+                warning = 'You only have ' + fmt(source.amount) + ' from ' + source.name + '.';
+            }
+        }
+
+        if (recipient.holds_from_you + amount >= 1.0) {
+            html += '<p style="margin:0.5rem 0 0;">' + recipient.name +
+                    ' will be able to redeem a lunch from you.</p>';
+        }
+
+        if (warning) {
+            html += '<p style="margin:0.5rem 0 0;color:var(--error);"><strong>' + warning + '</strong></p>';
+        }
+
+        body.innerHTML = html;
+        box.style.display = 'block';
+    }
+
+    [recipientEl, sourceEl, amountEl].forEach(function (el) {
+        el.addEventListener('change', render);
+        el.addEventListener('input', render);
+    });
+    render();
+})();
+</script>
 {% endblock %}

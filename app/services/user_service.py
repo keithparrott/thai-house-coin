@@ -54,7 +54,7 @@ def get_profile_stats(user_id):
     minted = db.session.query(
         db.func.coalesce(db.func.sum(Transaction.amount), 0.0)
     ).filter(
-        Transaction.type == 'bounty_payout',
+        Transaction.type.in_(['bounty_payout', 'mint_send']),
         Transaction.from_user_id == user_id,
         Transaction.is_invalidated == False  # noqa: E712
     ).scalar()
