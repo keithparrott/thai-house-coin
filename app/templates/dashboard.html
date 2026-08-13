@@ -5,21 +5,21 @@
 
 <div class="stat-grid">
     <div class="stat-box">
-        <div class="stat-value">{{ "%.2f"|format(total_balance) }}</div>
-        <div class="stat-label">Total THC</div>
-    </div>
-    <div class="stat-box">
         <div class="stat-value">{{ lunches_eaten }}</div>
         <div class="stat-label">Thai Lunches Eaten</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-value">{{ bounties_completed }}</div>
-        <div class="stat-label">Bounties Completed</div>
     </div>
     <div class="stat-box">
         <div class="stat-value">{{ lunches_given }}</div>
         <div class="stat-label">Thai Lunches Given</div>
     </div>
+    <a href="{{ url_for('wallet.index') }}" class="stat-box" style="text-decoration: none; display: block;">
+        <div class="stat-value">{{ lunches_owed }}</div>
+        <div class="stat-label">Lunches Owed</div>
+    </a>
+    <a href="{{ url_for('wallet.index') }}" class="stat-box" style="text-decoration: none; display: block;">
+        <div class="stat-value">{{ lunches_redeemable }}</div>
+        <div class="stat-label">Redeemable Lunches</div>
+    </a>
 </div>
 
 <div class="card">
@@ -111,36 +111,6 @@
     {% endfor %}
     {% else %}
     <p style="color: #666;">No open bounties right now.</p>
-    {% endif %}
-</div>
-
-<div class="card">
-    <h2>Balances by Source</h2>
-    {% if all_sources %}
-    <table>
-        <thead><tr><th>From</th><th>Amount</th><th></th></tr></thead>
-        <tbody>
-        {% for bal in all_sources %}
-        <tr>
-            <td>{{ bal.source.display_name }}</td>
-            <td><span class="thc-amount">{{ "%.2f"|format(bal.amount) }} THC</span></td>
-            <td style="text-align: right;">
-                {% if bal.amount >= 1.0 %}
-                <form method="POST" action="{{ url_for('redemption.request_redemption') }}" style="display: inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="target" value="{{ bal.source_user_id }}">
-                    <button type="submit" class="btn btn-success btn-sm">Redeem</button>
-                </form>
-                {% else %}
-                <button class="btn btn-sm" disabled style="background: #ccc; color: #888; cursor: not-allowed;">Redeem</button>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p style="color: #666;">No balances yet.</p>
     {% endif %}
 </div>
 

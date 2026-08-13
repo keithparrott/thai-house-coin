@@ -18,7 +18,8 @@ def index():
         Balance.amount > 0
     ).order_by(Balance.amount.desc()).all()
     total = sum(b.amount for b in balances)
-    return render_template('wallet/index.html', balances=balances, total=total)
+    matrix = balance_service.get_balance_matrix(current_user.id)
+    return render_template('wallet/index.html', balances=balances, total=total, matrix=matrix)
 
 
 @wallet_bp.route('/send', methods=['GET', 'POST'])

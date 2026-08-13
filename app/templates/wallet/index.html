@@ -13,21 +13,31 @@
 
 <div class="card">
     <h2>Balance by Source</h2>
-    {% if balances %}
+    {% if matrix %}
     <table>
-        <thead><tr><th>From</th><th>Amount</th><th>Redeemable</th></tr></thead>
+        <thead><tr><th>User</th><th>You owe them...</th><th>They owe you...</th></tr></thead>
         <tbody>
-        {% for bal in balances %}
-        <tr class="{{ 'redeemable' if bal.amount >= 1.0 }}">
-            <td>{{ bal.source.display_name }}</td>
-            <td><span class="thc-amount">{{ "%.2f"|format(bal.amount) }} THC</span></td>
-            <td>{% if bal.amount >= 1.0 %}<a href="{{ url_for('redemption.index') }}" class="btn btn-gold btn-sm">Redeem</a>{% else %}—{% endif %}</td>
+        {% for row in matrix %}
+        <tr>
+            <td>{{ row.user.display_name }}</td>
+            <td>
+                {% if row.you_owe_them > 0 %}
+                <span class="thc-amount">{{ "%.2f"|format(row.you_owe_them) }} THC</span>
+                {% if row.you_owe_them >= 1.0 %}<span class="badge badge-pending" style="font-size: 0.7rem; margin-left: 0.3rem;">redeemable by them</span>{% endif %}
+                {% else %}—{% endif %}
+            </td>
+            <td>
+                {% if row.they_owe_you > 0 %}
+                <span class="thc-amount">{{ "%.2f"|format(row.they_owe_you) }} THC</span>
+                {% if row.they_owe_you >= 1.0 %}<a href="{{ url_for('redemption.index') }}" class="btn btn-gold btn-sm" style="margin-left: 0.3rem;">Redeem</a>{% endif %}
+                {% else %}—{% endif %}
+            </td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p style="color: #666;">No THC yet. Complete some bounties to earn coins!</p>
+    <p style="color: #666;">No THC activity yet. Complete some bounties to earn coins!</p>
     {% endif %}
 </div>
 {% endblock %}
