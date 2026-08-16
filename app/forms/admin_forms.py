@@ -14,3 +14,8 @@ class CreateUserForm(FlaskForm):
 class ResetPasswordForm(FlaskForm):
     new_password = PasswordField('New Temporary Password', validators=[DataRequired(), Length(min=6)])
     submit = SubmitField('Reset Password')
+
+
+class AdminEditUserForm(FlaskForm):
+    display_name = StringField('Display Name', validators=[DataRequired(), Length(min=1, max=128)])
+    submit = SubmitField('Save Changes')

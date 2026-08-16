@@ -23,14 +23,21 @@
     </div>
     {% endif %}
 
-    {% if bounty.status in ['open', 'pending'] and bounty.poster_id == current_user.id %}
-    <div style="margin-top: 1rem;">
+    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+        {% if bounty.status in ['open', 'pending'] and bounty.poster_id == current_user.id %}
         <form method="POST" action="{{ url_for('bounty.cancel', bounty_id=bounty.id) }}" style="display: inline;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-outline btn-sm">Cancel Bounty</button>
         </form>
+        {% endif %}
+        {% if current_user.is_admin and bounty.title != '[Removed by an admin]' %}
+        <form method="POST" action="{{ url_for('admin.remove_bounty', bounty_id=bounty.id) }}" style="display: inline;"
+              onsubmit="return confirm('Remove this bounty? Its title and description will be permanently erased.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm">Remove Bounty (admin)</button>
+        </form>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 {% if bounty.status in ['open', 'pending'] and bounty.poster_id != current_user.id %}
@@ -75,8 +82,8 @@
         <p style="margin: 0.5rem 0; font-size: 0.9rem;">{{ claim.message }}</p>
         <p style="font-size: 0.8rem; color: #666;">{{ claim.submitted_at.strftime('%b %d, %Y %H:%M') }}</p>
 
-        {% if claim.status == 'pending' and bounty.poster_id == current_user.id %}
         <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            {% if claim.status == 'pending' and bounty.poster_id == current_user.id %}
             <form method="POST" action="{{ url_for('bounty.approve_claim', claim_id=claim.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success btn-sm">Approve</button>
@@ -85,8 +92,15 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-sm">Reject</button>
             </form>
+            {% endif %}
+            {% if current_user.is_admin and claim.message != '[Removed by an admin]' %}
+            <form method="POST" action="{{ url_for('admin.remove_claim', claim_id=claim.id) }}"
+                  onsubmit="return confirm('Remove this claim? Its message will be permanently erased.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline btn-sm">Remove (admin)</button>
+            </form>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
     {% endfor %}
     {% else %}

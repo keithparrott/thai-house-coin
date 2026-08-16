@@ -20,6 +20,7 @@
             <td>{% if user.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
             <td>{{ 'Yes' if user.is_active else 'No' }}</td>
             <td>
+                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-outline btn-sm">Edit Name</a>
                 <a href="{{ url_for('admin.reset_password', user_id=user.id) }}" class="btn btn-outline btn-sm">Reset PW</a>
                 <form method="POST" action="{{ url_for('admin.toggle_active', user_id=user.id) }}" style="display:inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

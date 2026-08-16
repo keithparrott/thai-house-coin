@@ -7,7 +7,8 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.user import User
 from app.models.transaction import Transaction
-from app.forms.admin_forms import CreateUserForm, ResetPasswordForm
+from app.forms.admin_forms import CreateUserForm, ResetPasswordForm, AdminEditUserForm
+from app.services import bounty_service
 from app.services.balance_service import rebuild_all_balances
 from app.services import user_service
 
@@ -72,6 +73,55 @@ def reset_password(user_id):
         flash(f'Password reset for "{user.username}".', 'success')
         return redirect(url_for('admin.panel'))
     return render_template('admin/reset_password.html', form=form, target_user=user)
+
+
+@admin_bp.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('admin.panel'))
+
+    form = AdminEditUserForm(obj=user)
+    if form.validate_on_submit():
+        try:
+            user_service.update_profile(user, form.display_name.data, user.email)
+            db.session.commit()
+            flash(f'Display name updated for "{user.username}".', 'success')
+            return redirect(url_for('admin.panel'))
+        except ValueError as e:
+            db.session.rollback()
+            flash(str(e), 'error')
+    return render_template('admin/edit_user.html', form=form, target_user=user)
+
+
+@admin_bp.route('/bounty/<int:bounty_id>/remove', methods=['POST'])
+@admin_required
+def remove_bounty(bounty_id):
+    try:
+        bounty_service.admin_remove_bounty(bounty_id)
+        db.session.commit()
+        flash('Bounty removed.', 'success')
+    except ValueError as e:
+        db.session.rollback()
+        flash(str(e), 'error')
+    return redirect(url_for('bounty.detail', bounty_id=bounty_id))
+
+
+@admin_bp.route('/claim/<int:claim_id>/remove', methods=['POST'])
+@admin_required
+def remove_claim(claim_id):
+    try:
+        claim = bounty_service.admin_remove_claim(claim_id)
+        bounty_id = claim.bounty_id
+        db.session.commit()
+        flash('Claim removed.', 'success')
+        return redirect(url_for('bounty.detail', bounty_id=bounty_id))
+    except ValueError as e:
+        db.session.rollback()
+        flash(str(e), 'error')
+        return redirect(url_for('bounty.board'))
 
 
 @admin_bp.route('/toggle-active/<int:user_id>', methods=['POST'])

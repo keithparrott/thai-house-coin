@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Edit User{% endblock %}
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 3rem auto;">
+    <h2>Edit {{ target_user.username }}</h2>
+    <p style="margin-bottom: 1rem; color: #666; font-size: 0.9rem;">
+        Changing a display name does not affect how @{{ target_user.username }} logs in.
+    </p>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.display_name.label }}
+            {{ form.display_name() }}
+            {% for error in form.display_name.errors %}
+            <p style="color: var(--warm-red); font-size: 0.85rem;">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {{ form.submit(class="btn btn-primary", style="width: 100%;") }}
+    </form>
+    <a href="{{ url_for('admin.panel') }}" style="display: block; margin-top: 1rem; font-size: 0.9rem;">Back to admin panel</a>
+</div>
+{% endblock %}

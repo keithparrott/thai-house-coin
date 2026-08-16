@@ -142,6 +142,53 @@ def reject_claim(claim_id, poster_id):
     return claim
 
 
+REMOVED_NOTICE = '[Removed by an admin]'
+
+
+def admin_remove_bounty(bounty_id):
+    """Moderation takedown. Redacts the text rather than deleting the row —
+    cancelled bounties stay listed on the board, so a status change alone
+    would leave the offending content on screen."""
+    bounty = db.session.get(Bounty, bounty_id)
+    if not bounty:
+        raise ValueError('Bounty not found.')
+
+    bounty.title = REMOVED_NOTICE
+    bounty.description = ''
+
+    # Close it only if it is still live. A completed bounty already paid out,
+    # so its status must stay accurate — we only strip the text.
+    if bounty.status in ('open', 'pending'):
+        BountyClaim.query.filter_by(bounty_id=bounty_id, status='pending').update({'status': 'rejected'})
+        bounty.status = 'cancelled'
+
+    db.session.flush()
+    return bounty
+
+
+def admin_remove_claim(claim_id):
+    """Moderation takedown for a claim message. Rejecting alone is not enough:
+    claim text renders regardless of status."""
+    claim = db.session.get(BountyClaim, claim_id)
+    if not claim:
+        raise ValueError('Claim not found.')
+
+    claim.message = REMOVED_NOTICE
+    if claim.status == 'pending':
+        claim.status = 'rejected'
+        bounty = claim.bounty
+        remaining = BountyClaim.query.filter(
+            BountyClaim.bounty_id == bounty.id,
+            BountyClaim.id != claim.id,
+            BountyClaim.status == 'pending'
+        ).count()
+        if remaining == 0 and bounty.status == 'pending':
+            bounty.status = 'open'
+
+    db.session.flush()
+    return claim
+
+
 def cancel_bounty(bounty_id, poster_id):
     bounty = db.session.get(Bounty, bounty_id)
     if not bounty or bounty.poster_id != poster_id:

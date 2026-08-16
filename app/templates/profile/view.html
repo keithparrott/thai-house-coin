@@ -12,7 +12,7 @@
             </p>
             <p style="font-size: 0.85rem; color: #666;">Member since {{ user.created_at.strftime('%b %d, %Y') }}</p>
             {% if is_self and user.email %}
-            <p style="font-size: 0.85rem; color: #666;">{{ user.email }} <span style="font-size: 0.75rem;">(only you and admins can see this)</span></p>
+            <p style="font-size: 0.85rem; color: #666;">{{ user.email }} <span style="font-size: 0.75rem;">(only you can see this)</span></p>
             {% endif %}
         </div>
         {% if is_self %}
