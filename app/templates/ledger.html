@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Ledger{% endblock %}
 {% block content %}
-<h1>Public Ledger</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1 style="margin-bottom: 0;">Public Ledger</h1>
+    <a href="{{ url_for('ledger.admin_actions') }}" class="btn btn-outline btn-sm">Admin Action Log</a>
+</div>
 
 <div class="card">
     <form method="GET" class="filter-bar">

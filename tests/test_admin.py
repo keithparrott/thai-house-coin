@@ -211,3 +211,163 @@ def test_non_admin_cannot_edit_other_user(client, regular_user, second_user):
     }, follow_redirects=True)
     assert b'Admin access required' in resp.data
     assert User.query.filter_by(username='alice').first().display_name == 'Alice'
+
+
+# --- Admin role management ---
+
+def test_grant_and_revoke_admin(client, admin_user, regular_user):
+    from app.extensions import db
+    from app.models.user import User
+
+    login(client, 'admin', 'password')
+    resp = client.post(f'/admin/toggle-role/{regular_user.id}', follow_redirects=True)
+    assert b'is now an admin' in resp.data
+    assert db.session.get(User, regular_user.id).is_admin is True
+
+    resp = client.post(f'/admin/toggle-role/{regular_user.id}', follow_redirects=True)
+    assert b'is no longer an admin' in resp.data
+    assert db.session.get(User, regular_user.id).is_admin is False
+
+
+def test_promoted_user_gains_admin_access(client, admin_user, regular_user):
+    login(client, 'admin', 'password')
+    client.post(f'/admin/toggle-role/{regular_user.id}')
+
+    login(client, 'alice', 'password')
+    resp = client.get('/admin/')
+    assert resp.status_code == 200
+    assert b'Admin access required' not in resp.data
+
+
+def test_revoked_user_loses_admin_access(client, admin_user, regular_user):
+    login(client, 'admin', 'password')
+    client.post(f'/admin/toggle-role/{regular_user.id}')
+    client.post(f'/admin/toggle-role/{regular_user.id}')
+
+    login(client, 'alice', 'password')
+    resp = client.get('/admin/', follow_redirects=True)
+    assert b'Admin access required' in resp.data
+
+
+def test_cannot_change_own_role(client, admin_user):
+    from app.extensions import db
+    from app.models.user import User
+
+    login(client, 'admin', 'password')
+    resp = client.post(f'/admin/toggle-role/{admin_user.id}', follow_redirects=True)
+    assert b'cannot change your own role' in resp.data
+    assert db.session.get(User, admin_user.id).is_admin is True
+
+
+def test_last_admin_cannot_be_removed(client, admin_user, regular_user):
+    """Promote a second admin, who then tries to demote the original."""
+    from app.extensions import db
+    from app.models.user import User
+
+    login(client, 'admin', 'password')
+    client.post(f'/admin/toggle-role/{regular_user.id}')
+
+    # Alice (now admin) demotes the original admin — allowed, she remains.
+    login(client, 'alice', 'password')
+    resp = client.post(f'/admin/toggle-role/{admin_user.id}', follow_redirects=True)
+    assert b'is no longer an admin' in resp.data
+    assert db.session.get(User, admin_user.id).is_admin is False
+
+    # She cannot demote herself, so the system can never reach zero admins.
+    resp = client.post(f'/admin/toggle-role/{regular_user.id}', follow_redirects=True)
+    assert b'cannot change your own role' in resp.data
+    assert User.query.filter_by(role='admin').count() == 1
+
+
+def test_non_admin_cannot_change_roles(client, regular_user, second_user):
+    from app.extensions import db
+    from app.models.user import User
+
+    login(client, 'bob', 'password')
+    resp = client.post(f'/admin/toggle-role/{regular_user.id}', follow_redirects=True)
+    assert b'Admin access required' in resp.data
+    assert db.session.get(User, regular_user.id).is_admin is False
+
+
+# --- Audit trail ---
+
+def test_actions_are_logged(client, admin_user, regular_user):
+    from app.models.admin_action import AdminAction
+
+    login(client, 'admin', 'password')
+    client.post(f'/admin/toggle-active/{regular_user.id}')
+    client.post(f'/admin/toggle-role/{regular_user.id}')
+    client.post(f'/admin/reset-password/{regular_user.id}', data={'new_password': 'newtemp123'})
+
+    actions = [a.action for a in AdminAction.query.order_by(AdminAction.id).all()]
+    assert actions == ['deactivate_user', 'grant_admin', 'reset_password']
+
+    entry = AdminAction.query.first()
+    assert entry.admin_user_id == admin_user.id
+    assert entry.target_user_id == regular_user.id
+
+
+def test_takedowns_are_logged(client, admin_user, regular_user):
+    from app.models.admin_action import AdminAction
+
+    bounty = _post_bounty(client, 'alice')
+    login(client, 'admin', 'password')
+    client.post(f'/admin/bounty/{bounty.id}/remove')
+
+    entry = AdminAction.query.filter_by(action='remove_bounty').first()
+    assert entry is not None
+    assert entry.target_id == bounty.id
+    assert entry.target_user_id == regular_user.id
+
+
+def test_log_never_republishes_removed_content(client, admin_user, regular_user):
+    """Renaming and takedown must not echo the offending text into the log."""
+    from app.models.admin_action import AdminAction
+
+    bounty = _post_bounty(client, 'alice', title='OFFENSIVE TITLE', description='bad words')
+
+    login(client, 'admin', 'password')
+    client.post(f'/admin/bounty/{bounty.id}/remove')
+    client.post(f'/admin/edit-user/{regular_user.id}', data={'display_name': 'Neutral Name'})
+
+    details = ' '.join(a.detail or '' for a in AdminAction.query.all())
+    assert 'OFFENSIVE TITLE' not in details
+    assert 'bad words' not in details
+    assert 'Alice' not in details, 'the previous display name must not be echoed'
+
+    resp = client.get('/ledger/admin-actions')
+    assert b'OFFENSIVE TITLE' not in resp.data
+    assert b'bad words' not in resp.data
+
+
+def test_audit_log_is_visible_to_regular_users(client, admin_user, regular_user):
+    login(client, 'admin', 'password')
+    client.post(f'/admin/toggle-active/{regular_user.id}')
+    client.post(f'/admin/toggle-active/{regular_user.id}')
+
+    login(client, 'alice', 'password')
+    resp = client.get('/ledger/admin-actions')
+    assert resp.status_code == 200
+    assert b'Admin Action Log' in resp.data
+    assert b'reactivated an account' in resp.data
+
+
+def test_audit_log_requires_login(client):
+    resp = client.get('/ledger/admin-actions', follow_redirects=True)
+    assert b'Please log in' in resp.data
+
+
+def test_invalidation_is_logged(client, admin_user, regular_user, second_user, app):
+    from app.models.admin_action import AdminAction
+    from app.models.transaction import Transaction
+
+    mint_thc(client, 'alice', 'bob', 1.0)
+    txn = Transaction.query.first()
+
+    login(client, 'admin', 'password')
+    client.post(f'/admin/invalidate/{txn.id}')
+
+    entry = AdminAction.query.filter_by(action='invalidate_transaction').first()
+    assert entry is not None
+    assert entry.target_id == txn.id
+    verify_balance_integrity(app)

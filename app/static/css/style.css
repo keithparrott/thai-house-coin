@@ -199,6 +199,12 @@ tr:hover { background: rgba(245,230,200,0.3); }
 .badge-declined { background: #FFEBEE; color: var(--error); }
 .badge-admin { background: var(--gold); color: white; }
 .badge-mint_send { background: var(--gold); color: white; }
+.badge-remove_bounty, .badge-remove_claim { background: #FFEBEE; color: var(--error); }
+.badge-grant_admin { background: var(--gold); color: white; }
+.badge-revoke_admin { background: #F3E5F5; color: #7B1FA2; }
+.badge-deactivate_user { background: #FFEBEE; color: var(--error); }
+.badge-activate_user { background: #E8F5E9; color: var(--success); }
+.badge-invalidate_transaction { background: #FFEBEE; color: var(--error); }
 
 /* THC AMOUNT */
 .thc-amount {

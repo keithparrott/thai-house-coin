@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Admin Action Log{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1>Admin Action Log</h1>
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-outline btn-sm">Back to Ledger</a>
+</div>
+
+<div class="card">
+    <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+        Every privileged action is recorded here and visible to everyone, so
+        moderation stays accountable.
+    </p>
+    <table>
+        <thead>
+            <tr><th>#</th><th>Admin</th><th>Action</th><th>Affected</th><th>Detail</th><th>When</th></tr>
+        </thead>
+        <tbody>
+        {% for entry in actions %}
+        <tr>
+            <td>{{ entry.id }}</td>
+            <td><a href="{{ url_for('profile.view', user_id=entry.admin_user_id) }}">{{ entry.admin_user.display_name }}</a></td>
+            <td><span class="badge badge-{{ entry.action }}">{{ label_for(entry.action) }}</span></td>
+            <td>
+                {% if entry.target_user_id %}
+                <a href="{{ url_for('profile.view', user_id=entry.target_user_id) }}">{{ entry.target_user.display_name }}</a>
+                {% else %}—{% endif %}
+            </td>
+            <td style="font-size: 0.8rem;">
+                {% if entry.target_type == 'bounty' %}
+                <a href="{{ url_for('bounty.detail', bounty_id=entry.target_id) }}">bounty #{{ entry.target_id }}</a>
+                {% elif entry.target_type == 'transaction' %}
+                txn #{{ entry.target_id }}
+                {% elif entry.target_type == 'claim' %}
+                claim #{{ entry.target_id }}
+                {% endif %}
+                {% if entry.detail %} &middot; {{ entry.detail }}{% endif %}
+            </td>
+            <td>{{ entry.created_at.strftime('%b %d, %H:%M') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center; color:#666;">No admin actions recorded yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="?page={{ pagination.prev_num }}">&laquo;</a>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                {% if p == pagination.page %}
+                <span class="active"><span>{{ p }}</span></span>
+                {% else %}
+                <a href="?page={{ p }}">{{ p }}</a>
+                {% endif %}
+            {% else %}
+            <span>&hellip;</span>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="?page={{ pagination.next_num }}">&raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
